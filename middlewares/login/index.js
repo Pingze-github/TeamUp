@@ -5,7 +5,6 @@ module.exports = function login() {
     if (ctx.url === '/login') {
       if (ctx.method.toLowerCase() === 'post') {
         if (ctx.request.body.username === 'root') {
-          console.log('设置session')
           ctx.session.user = {
             username: ctx.request.body.username
           };
@@ -24,7 +23,7 @@ module.exports = function login() {
       return ctx.redirect('/');
     }
     if (!ctx.session.user) return ctx.redirect('/login');
-    next();
+    await next();
   }
 };
 

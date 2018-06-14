@@ -1,0 +1,33 @@
+<html>
+<head>
+    <title>Markdown编辑器</title>
+    <link rel="stylesheet" href="/lib/editor.md/css/editormd.css" />
+</head>
+
+<body>
+
+    <form>
+        <div id="my-editormd" >
+            <textarea id="my-editormd-markdown-doc" name="my-editormd-markdown-doc" style="display:none;"></textarea>
+            <!-- 注意：name属性的值-->
+            <textarea id="my-editormd-html-code" name="my-editormd-html-code" style="display:none;"></textarea>
+        </div>
+    </form>
+
+
+    <script src="/lib/jquery/jquery.min.js"></script>
+    <script src="/lib/editor.md/editormd.min.js"></script>
+    <script type="text/javascript">
+      $(function() {
+        editormd("my-editormd", {
+          width   : "90%",
+          height  : 640,
+          syncScrolling : "single",
+          path    : "/lib/editor.md/lib/",
+          saveHTMLToTextarea : true
+        });
+      });
+    </script>
+</body>
+
+</html>

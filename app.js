@@ -18,7 +18,7 @@ render(app, {
   layout: false,
   viewExt: 'html',
   cache: false,
-  debug: true
+  debug: false
 });
 app.keys = ['bWFya2Rvd250ZWFtdXA='];
 app.use(session({
@@ -37,6 +37,14 @@ router.get('/', (ctx) => {
   ctx.body = 'index'
 });
 
+router.get('/123', (ctx) => {
+  ctx.body = '123'
+});
+
+router.get('/write', async (ctx) => {
+  await ctx.render('write');
+});
+
 // router.get('/login', (ctx) => {
 //   ctx.session.logined = true;
 //   console.log(ctx.url, ctx.session)
@@ -47,9 +55,9 @@ app
   .use(router.routes())
   .use(router.allowedMethods());
 
-app.on('error', (err, ctx) => {
-  console.log(err);
-});
+// app.on('error', (err, ctx) => {
+//   console.log(err);
+// });
 
 app.listen(3000, () => {
   console.log('Server running...')
