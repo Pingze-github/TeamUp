@@ -1,18 +1,22 @@
 
 const path = require('path');
 const Koa = require('koa');
-const Router = require('koa-router');
 const staticServer = require('koa-static');
 const koaBody = require('koa-body');
 const render = require('koa-ejs');
 const session = require('koa-session');
 const login = require('./middlewares/login');
+const router = require('./routes');
 
 const app = new Koa();
-const router = new Router();
 
 app.use(staticServer(path.join(__dirname, 'public')));
-app.use(koaBody());
+
+app.use(koaBody({
+  multipart: true,
+  maxFieldsSize: '2mb',
+}));
+
 render(app, {
   root: path.join(__dirname, 'views'),
   layout: false,
@@ -20,6 +24,7 @@ render(app, {
   cache: false,
   debug: false
 });
+
 app.keys = ['bWFya2Rvd250ZWFtdXA='];
 app.use(session({
   key: 'teamup:sess',
@@ -31,33 +36,12 @@ app.use(session({
   renew: false,
 }, app));
 
-app.use(login());
-
-router.get('/', (ctx) => {
-  ctx.body = 'index'
-});
-
-router.get('/123', (ctx) => {
-  ctx.body = '123'
-});
-
-router.get('/write', async (ctx) => {
-  await ctx.render('write');
-});
-
-// router.get('/login', (ctx) => {
-//   ctx.session.logined = true;
-//   console.log(ctx.url, ctx.session)
-//   ctx.body = 'login'
-// });
+// app.use(login());
 
 app
   .use(router.routes())
   .use(router.allowedMethods());
 
-// app.on('error', (err, ctx) => {
-//   console.log(err);
-// });
 
 app.listen(3000, () => {
   console.log('Server running...')

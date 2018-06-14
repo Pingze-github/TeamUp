@@ -7,7 +7,7 @@
 <body>
 
     <form>
-        <div id="my-editormd" >
+        <div id="md-editor" >
             <textarea id="my-editormd-markdown-doc" name="my-editormd-markdown-doc" style="display:none;"></textarea>
             <!-- 注意：name属性的值-->
             <textarea id="my-editormd-html-code" name="my-editormd-html-code" style="display:none;"></textarea>
@@ -19,13 +19,51 @@
     <script src="/lib/editor.md/editormd.min.js"></script>
     <script type="text/javascript">
       $(function() {
-        editormd("my-editormd", {
+        // 创建编辑器
+        var mdEditor = editormd("md-editor", {
           width   : "90%",
           height  : 640,
-          syncScrolling : "single",
           path    : "/lib/editor.md/lib/",
-          saveHTMLToTextarea : true
+          syncScrolling : "single",
+          // previewTheme: 'dark',
+          // editorTheme: 'pastel-on-dark',
+          saveHTMLToTextarea : true,
+          htmlDecode: "style,script,iframe|on*",
+          taskList: true,
         });
+        // 注册事件
+        $("#md-editor").on('paste', function (ev) {
+          var data = ev.clipboardData;
+          var items = (event.clipboardData || event.originalEvent.clipboardData).items;
+          for (var index in items) {
+            var item = items[index];
+            if (item.kind === 'file') {
+              var blob = item.getAsFile();
+              var reader = new FileReader();
+              reader.onload = function (event) {
+                var base64 = event.target.result;
+
+                var imgName = blob.name + '_' + (+new Date());
+
+                mdEditor.insertValue(`[图片上传中(${imgName})]`);
+
+                // //ajax上传图片
+                // $.post("{:url('api/uploader/upEditorImg')}",{base:base64}, function (ret) {
+                //   layer.msg(ret.msg);
+                //   if (ret.code === 1) {
+                //     //新一行的图片显示
+                //     editor.insertValue("\n![" + ret.data.title + "](" + ret.data.path + ")");
+                //   }
+                // });
+
+              };
+              var url = reader.readAsDataURL(blob);
+            }
+          }
+        });
+
+
+        // mdEditor.getMarkdown();
       });
     </script>
 </body>
