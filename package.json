@@ -1,0 +1,27 @@
+{
+  "name": "teamup",
+  "version": "1.0.0",
+  "description": "> Mark down, team up!",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pingze-github/TeamUp.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Pingze-github/TeamUp/issues"
+  },
+  "homepage": "https://github.com/Pingze-github/TeamUp#readme",
+  "dependencies": {
+    "koa": "^2.5.1",
+    "koa-body": "^4.0.3",
+    "koa-ejs": "^4.1.1",
+    "koa-router": "^7.4.0",
+    "koa-session": "^5.8.1",
+    "koa-static": "^4.0.3"
+  }
+}
