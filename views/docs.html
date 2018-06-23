@@ -205,157 +205,143 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
     <script>
 
-        // ****** pre ******
-        $.fn.serializeObject = function() {
-          var o = {};
-          var a = this.serializeArray();
-          $.each(a, function() {
-            if (o[this.name]) {
-              if (!o[this.name].push) {
-                o[this.name] = [o[this.name]];
-              }
-              o[this.name].push(this.value || '');
-            } else {
-              o[this.name] = this.value || '';
+      // ****** pre ******
+      $.fn.serializeObject = function() {
+        var o = {};
+        var a = this.serializeArray();
+        $.each(a, function() {
+          if (o[this.name]) {
+            if (!o[this.name].push) {
+              o[this.name] = [o[this.name]];
             }
-          });
-          return o;
-        };
-
-        // TODO 根节点不应该显示出来。使用另外的方式建立根文档
-
-        // ****** modal ******
-        (function(){
-          function clearModals() {
-            $('.modal input').val('');
-            $('.modal *[name="parent"]').html('<option value="#">根节点</option>');
-            $('.modal #parent-tree').hide();
+            o[this.name].push(this.value || '');
+          } else {
+            o[this.name] = this.value || '';
           }
-          function actionEnter ($this) {
-            var formData = $this.find('form').serializeObject();
-            if (!formData.title) return alert('未输入title');
-            formData.parentId = formData.parent === 'root' ? '#' : formData.parent;
-            formData.markdown = '# ' + formData.title;
-            formData.html = '<h1><a name="'
-            + formData.title + '" class="reference-link"></a><span class="header-link octicon octicon-link"></span>'
-            + formData.title + '</h1>';
+        });
+        return o;
+      };
 
-            $.post('/publish', formData, function (ret) {
-              if (ret.succeed) {
-                const _id = ret._id;
-                $('.modal').hide();
-                clearModals();
-                return location.href = '/write/' + _id;
-              }
-              alert('发布失败');
-            });
-          }
-          $shadow = $('.shadow');
-          $shadow.click(function () {
-            $('.modal').hide();
+      // ****** modal ******
+      (function(){
+        $shadow = $('.shadow');
+        $shadow.click(function () {
+          $('.modal').hide();
+          $shadow.hide();
+          clearModals();
+        });
+        $('.modal').each(function () {
+          $this = $(this);
+          $this.find('.close').click(function () {
+            $this.hide();
             $shadow.hide();
             clearModals();
           });
-          $('.modal').each(function () {
-            $this = $(this);
-
-            $this.find('.close').click(function () {
-              $this.hide();
-              $shadow.hide();
-              clearModals();
-            });
-            $this.find('.enter').click(function () {
-              actionEnter($this);
-            });
-            $this.find('.cancel').click(function () {
-              $this.hide();
-              $shadow.hide();
-              clearModals();
-            });
+          $this.find('.enter').click(function () {
+            actionEnter($this);
           });
-        })();
-
-        // ****** function ******
-        function actionAdd() {
-          // TODO 以选中的节点作为父节点
-          const _id = $('#preview iframe').attr('_id');
-
-          // select选中当前文档树中选中的
-          if (_id && window.docMap[_id]) {
-            $('#modal-add *[name="parent"]').html('<option value="' + _id +'">' + window.docMap[_id].title + '</option>')
-            console.log($.jstree.reference('#parent-tree'))
-            $.jstree.reference('#parent-tree').deselect_all(_id);
-            $.jstree.reference('#parent-tree').select_node(_id);
-            // $('#parent-tree').find('li#' + _id + '[role="treeitem"] a').click();
-          }
-
-          $('#modal-add *[name="parentId"]').val(_id);
-          // $('#modal-add *[name="parent"]').val(title);
-          $('#modal-add').show();
-          $('.shadow').show();
-        }
-
-        function actionEdit() {
-          const _id = $('#preview iframe').attr('_id');
-          if (_id) location.href = '/write/' + _id;
-        }
-
-        function actionDelete() {
-          const _id = $('#preview iframe').attr('_id');
-
-          $.ajax({
-            url: '/api/doc/' + _id,
-            type: "delete",
-            success: function(ret){
-              if (ret.succeed) {
-                console.log('删除成功');
-                location.reload();
-              } else {
-                alert('删除失败');
-              }
-            }
+          $this.find('.cancel').click(function () {
+            $this.hide();
+            $shadow.hide();
+            clearModals();
           });
-
-        }
-
-
-        // ****** init code ******
-        $.get('/api/docs', function (ret) {
-          docs = ret;
-
-          window.docMap = {};
-          docs.forEach(function(doc) {
-            window.docMap[doc._id] = doc;
-          });
-
-          docs = docs.map(function (doc) {
-            doc.text = doc.title;
-            doc.id = doc._id;
-            doc.parent = doc.parentId || '#';
-            return doc;
-          });
-
-          // 渲染树
-          renderDocTree(docs);
-          // 渲染下拉菜单
-          renderSelect2(docs);
         });
+      })();
 
-        function renderSelect2(docs) {
+      // ****** function ******
+      function clearModals() {
+        $('.modal input').val('');
+        $('.modal *[name="parent"]').html('<option value="#">根节点</option>');
+        $('.modal #parent-tree').hide();
+      }
 
-          var $parent = $('#modal-add *[name="parent"]');
-          var $parentTree = $('#modal-add #parent-tree');
+      /**
+       * 增加modal中[确定]行为
+       * @param $this
+       */
+      function actionEnter ($this) {
+        var formData = $this.find('form').serializeObject();
+        if (!formData.title) return alert('未输入title');
+        formData.parentId = formData.parent === 'root' ? '#' : formData.parent;
+        formData.markdown = '# ' + formData.title;
+        formData.html = '<h1><a name="'
+          + formData.title + '" class="reference-link"></a><span class="header-link octicon octicon-link"></span>'
+          + formData.title + '</h1>';
+        $.post('/publish', formData, function (ret) {
+          if (ret.succeed) {
+            const _id = ret._id;
+            $('.modal').hide();
+            $('.shadow').hide();
+            clearModals();
 
-          // 增加根节点
-          docs = docs.map(function (doc) {
-            if (doc.parent === '#') doc.parent = 'root';
-            return doc;
-          });
-          docs.push({id:'root', _id: null, title:'根节点', text:'根节点', parent: '#', parentId: '#'});
+            // location.href = '/write/' + _id;
+            repaint(function() {
+              // FIXME 捕捉到树的refresh-ready事件，再进行节点选中
+              setTimeout(() => {
+                $.jstree.reference('#tree').deselect_all(_id);
+                $.jstree.reference('#tree').select_node(_id);
+              }, 100)
+            });
+          } else {
+            alert('发布失败');
+          }
+        });
+      }
 
-          // 渲染选择树
+      function actionAdd() {
+        const _id = $('#preview iframe').attr('_id');
+        // select选中当前文档树中选中的
+        if (_id && window.docMap[_id]) {
+          $('#modal-add *[name="parent"]').html('<option value="' + _id +'">' + window.docMap[_id].title + '</option>')
+          $.jstree.reference('#parent-tree').deselect_all(_id);
+          $.jstree.reference('#parent-tree').select_node(_id);
+          // $('#parent-tree').find('li#' + _id + '[role="treeitem"] a').click();
+        }
+        $('#modal-add *[name="parentId"]').val(_id);
+        // $('#modal-add *[name="parent"]').val(title);
+        $('#modal-add').show();
+        $('.shadow').show();
+      }
+
+      function actionEdit() {
+        const _id = $('#preview iframe').attr('_id');
+        if (_id) location.href = '/write/' + _id;
+      }
+
+      function actionDelete() {
+        const _id = $('#preview iframe').attr('_id');
+        $.ajax({
+          url: '/api/doc/' + _id,
+          type: "delete",
+          success: function(ret){
+            if (ret.succeed) {
+              console.log('删除成功');
+              repaint();
+            } else {
+              alert('删除失败');
+            }
+          }
+        });
+      }
+
+      function renderSelect(docs) {
+        var $parent = $('#modal-add *[name="parent"]');
+        var $parentTree = $('#modal-add #parent-tree');
+
+        // 增加根节点
+        docs = docs.map(function (doc) {
+          if (doc.parent === '#') doc.parent = 'root';
+          return doc;
+        });
+        docs.push({id:'root', _id: null, title:'根节点', text:'根节点', parent: '#', parentId: '#'});
+
+        // 渲染选择树
+        if ($.jstree.reference('#parent-tree')) {
+          $.jstree.reference('#parent-tree').settings.core.data = docs;
+          $.jstree.reference('#parent-tree').refresh();
+        } else {
           $parentTree
-            .on('changed.jstree', function (e, data) {
+            .on('select_node.jstree', function (e, data) {
               const _id = data.node.id;
               $parent.html('<option value="' + _id +'">' + data.node.text + '</option>');
               $parentTree.hide();
@@ -370,12 +356,9 @@
               },
               "plugins" : [ "wholerow"]
             });
-
-
-
-          // 事件
-          // 这里用了奇技淫巧。通过mouseup限制select下拉菜单的弹出，而监听mousedown
+          // 呼出选择树
           $parent.mousedown(function () {
+            console.log('$parent.mousedown');
             if ($parentTree.is(':hidden')) {
               $parentTree.show();
             } else {
@@ -383,15 +366,22 @@
             }
             return false;
           });
-
         }
+        // 事件
+        // 这里用了奇技淫巧。通过mouseup限制select下拉菜单的弹出，而监听mousedown
+      }
 
+      function renderDocTree(docs, cb) {
+        console.log('重新渲染');
 
-        function renderDocTree(docs) {
-          console.log('docs', docs);
-
+        if ($.jstree.reference('#tree')) {
+          console.log($.jstree.reference('#tree'));
+          $.jstree.reference('#tree').settings.core.data = docs;
+          $.jstree.reference('#tree').refresh();
+          if (cb) cb();
+        } else {
           $('#tree')
-            .on('changed.jstree', function (e, data) {
+            .on('select_node.jstree', function (e, data) {
               const _id = data.node.id;
               $.get('/api/doc/' + _id, function (ret) {
                 ret.html = ret.html || '空';
@@ -399,18 +389,50 @@
                 $('#preview iframe').attr('_id', _id);
               });
             })
+            .on('ready.jstree', function () {
+              const fisrtId = $('#tree').find('li').first().attr('id');
+              if (fisrtId) $.jstree.reference('#tree').select_node(fisrtId);
+            })
             .jstree({
-            "core" : {
-              "data": docs,
-              "themes" : {
-                "variant" : "large",
-                "icons": false,
-              }
-            },
-            "plugins" : [ "wholerow"]
-          });
-
+              "core" : {
+                "data": docs,
+                "themes" : {
+                  "variant" : "large",
+                  "icons": false,
+                }
+              },
+              "plugins" : [ "wholerow"]
+            });
         }
+
+      }
+
+      function repaint(cbTree, cbSelect) {
+        $.get('/api/docs', function (ret) {
+          docs = ret;
+          window.docMap = {};
+          docs.forEach(function(doc) {
+            window.docMap[doc._id] = doc;
+          });
+          docs = docs.map(function (doc) {
+            doc.text = doc.title;
+            doc.id = doc._id;
+            doc.parent = doc.parentId || '#';
+            return doc;
+          });
+          docs.sort(function (a,b) {
+            return a.text.localeCompare(b.text);
+          });
+          // 渲染树
+          renderDocTree(docs, cbTree);
+          // 渲染下拉菜单
+          renderSelect(docs, cbSelect);
+
+        });
+      }
+
+      // ****** init code ******
+      repaint();
 
     </script>
 </body>
