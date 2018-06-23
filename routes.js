@@ -67,25 +67,26 @@ router.get('/api/doc/:_id', async (ctx) => {
 router.delete('/api/doc/:_id', async (ctx) => {
 
   async function findChildrenIds(ids) {
-    const children = await Models.document.find({_id: {$in: ids}});
-    children.find();
-    return children;
+    const children = await Models.document.find({parentId: {$in: ids}}, {_id: 1});
+    return children.map((doc) => doc._id);
   }
 
 
-  try {
-    // TODO 将其子节点都删掉
-    const deleteIds = [];
-    await Models.document.findOne({_id: ctx.params._id.toString()}, {_id: 1, parentId: 1});
-
-
-
-    // await Models.document.remove({_id: ctx.params._id.toString()});
-
-    return ctx.body = {succeed: true};
-  } catch (e) {
-    return ctx.body = {succeed: false};
+  // TODO 将其子节点都删掉
+  let deleteIds = [];
+  let ids = [ctx.params._id];
+  while (true) {
+    deleteIds = deleteIds.concat(ids);
+    ids = await findChildrenIds(ids);
+    if (ids.length === 0) break;
   }
+  deleteIds = deleteIds.map(v => Models.Types.ObjectId(v));
+
+  console.log('deleting', deleteIds);
+
+  console.log(await Models.document.deleteMany({_id: {$in: deleteIds}}));
+
+  return ctx.body = {succeed: true};
 });
 
 // 图片上传

@@ -130,7 +130,7 @@
             display: block;
             margin: 30px 0 30px 0;
         }
-        .modal input {
+        .modal input, .modal select {
             border: solid 1px #CCCCCC;
             padding: 0 5px 0 5px;
             height: 32px;
@@ -142,6 +142,19 @@
             font-size: 16px;
             display: block;
             margin: 10px 0 10px 0;
+        }
+        .modal select:disabled {
+            color: black;
+        }
+        #parent-tree {
+            display: none;
+            background: white;
+            position: absolute;
+            border: solid 1px #CCCCCC;
+            border-top: none;
+            padding: 5px 5px 5px 5px;
+            font-size: 18px;
+            width: 300px;
         }
     </style>
 </head>
@@ -172,7 +185,13 @@
             </div>
             <div class="form-item">
                 <label>父节点</label>
-                <input name="parent">
+                <!--<input name="parent">-->
+
+                <select name="parent" onmouseup="javascript: return false;">
+                    <option value="#">根节点</option>
+                </select>
+
+                <div id="parent-tree"></div>
             </div>
             <input hidden name="parentId">
         </form>
@@ -209,18 +228,22 @@
         (function(){
           function clearModals() {
             $('.modal input').val('');
+            $('.modal *[name="parent"]').html('<option value="#">根节点</option>');
+            $('.modal #parent-tree').hide();
           }
           function actionEnter ($this) {
             var formData = $this.find('form').serializeObject();
             if (!formData.title) return alert('未输入title');
-            formData.parentId = $this.find('input[name="parentId"]').val() || '#';
+            formData.parentId = formData.parent === 'root' ? '#' : formData.parent;
             formData.markdown = '# ' + formData.title;
             formData.html = '<h1><a name="'
             + formData.title + '" class="reference-link"></a><span class="header-link octicon octicon-link"></span>'
             + formData.title + '</h1>';
+
             $.post('/publish', formData, function (ret) {
               if (ret.succeed) {
                 const _id = ret._id;
+                $('.modal').hide();
                 clearModals();
                 return location.href = '/write/' + _id;
               }
@@ -255,18 +278,19 @@
         // ****** function ******
         function actionAdd() {
           // TODO 以选中的节点作为父节点
-          const _id = $('#preview iframe').attr('_id') || null;
-          const title = _id && window.docMap[_id] ? window.docMap[_id].title : '根节点';
-          // let parentId, parentTitle;
-          // if (_id && window.docMap[_id].parentId) {
-          //   parentId = window.docMap[_id].parentId;
-          //   parentTitle = window.docMap[parentId].title;
-          // } else {
-          //   parentTitle = '根节点';
-          // }
+          const _id = $('#preview iframe').attr('_id');
 
-          $('#modal-add input[name="parentId"]').val(_id);
-          $('#modal-add input[name="parent"]').val(title);
+          // select选中当前文档树中选中的
+          if (_id && window.docMap[_id]) {
+            $('#modal-add *[name="parent"]').html('<option value="' + _id +'">' + window.docMap[_id].title + '</option>')
+            console.log($.jstree.reference('#parent-tree'))
+            $.jstree.reference('#parent-tree').deselect_all(_id);
+            $.jstree.reference('#parent-tree').select_node(_id);
+            // $('#parent-tree').find('li#' + _id + '[role="treeitem"] a').click();
+          }
+
+          $('#modal-add *[name="parentId"]').val(_id);
+          // $('#modal-add *[name="parent"]').val(title);
           $('#modal-add').show();
           $('.shadow').show();
         }
@@ -294,6 +318,8 @@
 
         }
 
+
+        // ****** init code ******
         $.get('/api/docs', function (ret) {
           docs = ret;
 
@@ -302,11 +328,6 @@
             window.docMap[doc._id] = doc;
           });
 
-          renderDocTree(docs);
-        });
-
-        function renderDocTree(docs) {
-
           docs = docs.map(function (doc) {
             doc.text = doc.title;
             doc.id = doc._id;
@@ -314,8 +335,59 @@
             return doc;
           });
 
-          // docs.unshift({id:'root', parent:'#', title:'根节点', text:'根节点', markdown:'# 根节点', html:'根节点'});
+          // 渲染树
+          renderDocTree(docs);
+          // 渲染下拉菜单
+          renderSelect2(docs);
+        });
 
+        function renderSelect2(docs) {
+
+          var $parent = $('#modal-add *[name="parent"]');
+          var $parentTree = $('#modal-add #parent-tree');
+
+          // 增加根节点
+          docs = docs.map(function (doc) {
+            if (doc.parent === '#') doc.parent = 'root';
+            return doc;
+          });
+          docs.push({id:'root', _id: null, title:'根节点', text:'根节点', parent: '#', parentId: '#'});
+
+          // 渲染选择树
+          $parentTree
+            .on('changed.jstree', function (e, data) {
+              const _id = data.node.id;
+              $parent.html('<option value="' + _id +'">' + data.node.text + '</option>');
+              $parentTree.hide();
+            })
+            .jstree({
+              "core" : {
+                "data": docs,
+                "themes" : {
+                  "variant" : "large",
+                  "icons": false,
+                }
+              },
+              "plugins" : [ "wholerow"]
+            });
+
+
+
+          // 事件
+          // 这里用了奇技淫巧。通过mouseup限制select下拉菜单的弹出，而监听mousedown
+          $parent.mousedown(function () {
+            if ($parentTree.is(':hidden')) {
+              $parentTree.show();
+            } else {
+              $parentTree.hide();
+            }
+            return false;
+          });
+
+        }
+
+
+        function renderDocTree(docs) {
           console.log('docs', docs);
 
           $('#tree')

@@ -17,4 +17,6 @@ fs.readdirSync(baseDir, {encoding: 'utf-8'}).forEach(fname => {
   }
 });
 
+Models.Types = mongoose.Types;
+
 module.exports = Models;
