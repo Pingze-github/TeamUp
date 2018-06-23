@@ -2,6 +2,7 @@
 <head>
     <title>文档树</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
+    <link rel="stylesheet" href="/lib/editor.md/css/editormd.css" />
     <style>
         * {
             margin: 0;
@@ -17,15 +18,15 @@
             margin: 30px 60px 30px 60px;
         }
         #header {
-            height: 60px;
+            height: 38px;
             width: 100%;
             border: solid 1px #CCCCCC;
             border-bottom: none;
             text-align: center;
         }
         #ICON {
-            line-height: 60px;
-            padding-left: 20px;
+            line-height: 38px;
+            padding-left: 16px;
             font-size: 30px;
         }
         .btn {
@@ -41,12 +42,20 @@
             background: #222222;
             color: #EEEEEE;
         }
-        #tree {
+        .left {
+            float: left;
             width: 30%;
             min-height: 100%;
-            float: left;
             border: solid 1px #CCCCCC;
             border-right: none;
+        }
+        #tree-toolbar {
+            border-bottom: 1px solid #CCCCCC;
+            height: 38px;
+            width: 100%;
+        }
+        #tree {
+            width: 100%;
         }
         #preview {
             width: 70%;
@@ -162,11 +171,17 @@
     <div id="wrap">
         <div id="header">
             <span id="ICON">TEAMUP</span>
-            <div class="btn" onclick="actionDelete()">删除</div>
-            <div class="btn" onclick="actionEdit()">编辑</div>
-            <div class="btn" onclick="actionAdd()">新增</div>
         </div>
-        <div id="tree"></div>
+        <div class="left">
+            <div id="tree-toolbar">
+                <ul class="editormd-menu">
+                    <li onclick="actionAdd()" class="pull-right"><a href="javascript:;" title="新增" unselectable="on"><i class="fa fa-plus" name="add" unselectable="on"></i></a></li>
+                    <li onclick="actionDelete()" class="pull-right"><a href="javascript:;" title="删除" unselectable="on"><i class="fa fa-remove" name="delete" unselectable="on"></i></a></li>
+                    <li onclick="actionEdit()" class="pull-right"><a href="javascript:;" title="编辑" unselectable="on"><i class="fa fa-pencil" name="eidt" unselectable="on"></i></a></li>
+                </ul>
+            </div>
+            <div id="tree"></div>
+        </div>
         <div id="preview">
             <iframe srcdoc=""></iframe>
         </div>
