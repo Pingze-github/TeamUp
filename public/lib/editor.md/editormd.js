@@ -577,7 +577,7 @@
                         
                         _this.setToolbar();
 
-                        editormd.loadScript(loadPath + "marked.min", function() {
+                        editormd.loadScript(loadPath + "marked", function() {
 
                             editormd.$marked = marked;
                                 
@@ -1964,7 +1964,7 @@
          */
         
         save : function() {
-            
+
             var _this            = this;
             var state            = this.state;
             var settings         = this.settings;
@@ -2016,7 +2016,9 @@
             marked.setOptions(markedOptions);
                     
             var newMarkdownDoc = editormd.$marked(cmValue, markedOptions);
-            
+
+            console.log('newMarkdownDoc', newMarkdownDoc);
+
             //console.info("cmValue", cmValue, newMarkdownDoc);
             
             newMarkdownDoc = editormd.filterHTMLTags(newMarkdownDoc, settings.htmlDecode);
@@ -3398,7 +3400,8 @@
             sequenceDiagram      : false,          // sequenceDiagram.js only support IE9+
         };
         
-        var settings        = $.extend(defaults, options || {});    
+        var settings        = $.extend(defaults, options || {});
+        console.log('editormd.$marked' , editormd.$marked)
         var marked          = editormd.$marked;
         var markedRenderer  = new marked.Renderer();
         markdownToC         = markdownToC || [];        
@@ -3958,9 +3961,8 @@
         };
         
 		markdownDoc = new String(markdownDoc);
-        
         var markdownParsed = marked(markdownDoc, markedOptions);
-        
+
         markdownParsed = editormd.filterHTMLTags(markdownParsed, settings.htmlDecode);
         
         if (settings.markdownSourceCode) {

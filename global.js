@@ -1,0 +1,2 @@
+
+global.Models = require('./mongo');

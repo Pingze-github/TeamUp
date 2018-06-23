@@ -1,0 +1,345 @@
+<html>
+<head>
+    <title>文档树</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html,body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        #wrap {
+            margin: 30px 60px 30px 60px;
+        }
+        #header {
+            height: 60px;
+            width: 100%;
+            border: solid 1px #CCCCCC;
+            border-bottom: none;
+            text-align: center;
+        }
+        #ICON {
+            line-height: 60px;
+            padding-left: 20px;
+            font-size: 30px;
+        }
+        .btn {
+            float: right;
+            height: 60px;
+            line-height: 60px;
+            width: 100px;
+            border-left: solid 1px #CCCCCC;
+            cursor: pointer;
+            user-select: none;
+        }
+        .btn:hover {
+            background: #222222;
+            color: #EEEEEE;
+        }
+        #tree {
+            width: 30%;
+            min-height: 100%;
+            float: left;
+            border: solid 1px #CCCCCC;
+            border-right: none;
+        }
+        #preview {
+            width: 70%;
+            height: 100%;
+            float: left;
+            border: solid 1px #CCCCCC;
+        }
+        #preview iframe {
+            display: block;
+            height: 100%;
+            width: 100%;
+            margin:0 auto;
+            border: none;
+        }
+        /*modals*/
+        .shadow {
+            display: none;
+            position: fixed;
+            top: 0;
+            z-index: 998;
+            background: black;
+            opacity: 0.4;
+            width: 100%;
+            height: 100%;
+        }
+        .modal {
+            display: none;
+            background: white;
+            border: 1px solid #AAAAAA;
+            position: fixed;
+            z-index: 999;
+            margin: 0 auto;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .modal .head{
+            display: block;
+            width: 100%;
+            height: 45px;
+            border-bottom: 1px solid #CCCCCC;
+            margin-bottom: 35px;
+        }
+        .modal .foot{
+            display: block;
+            width: 100%;
+            height: 45px;
+            /*border-top: 1px solid #CCCCCC;*/
+            margin-top: 15px;
+        }
+        .modal .title {
+            float: left;
+            padding-left: 10px;
+            font-size: 18px;
+            line-height: 45px;
+        }
+        .modal .close {
+            line-height: 45px;
+            padding-right: 10px;
+            font-size: 16px;
+            float: right;
+            cursor: pointer;
+        }
+        .modal .btn {
+            text-align: center;
+            width: 80px;
+            height: 36px;
+            line-height: 36px;
+            margin: 0 20px 10px 0;
+            border: 1px solid #CCCCCC;
+            font-size: 16px;
+            float: right;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        .modal form {
+            display: block;
+            margin: 15px 30px 15px 30px;
+        }
+        .modal .form-item {
+            display: block;
+            margin: 30px 0 30px 0;
+        }
+        .modal input {
+            border: solid 1px #CCCCCC;
+            padding: 0 5px 0 5px;
+            height: 32px;
+            line-height: 32px;
+            font-size: 18px;
+            width: 300px;
+        }
+        .modal label {
+            font-size: 16px;
+            display: block;
+            margin: 10px 0 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="wrap">
+        <div id="header">
+            <span id="ICON">TEAMUP</span>
+            <div class="btn" onclick="actionDelete()">删除</div>
+            <div class="btn" onclick="actionEdit()">编辑</div>
+            <div class="btn" onclick="actionAdd()">新增</div>
+        </div>
+        <div id="tree"></div>
+        <div id="preview">
+            <iframe srcdoc=""></iframe>
+        </div>
+    </div>
+    <div class="shadow"></div>
+
+    <div class="modal" id="modal-add">
+        <div class="head">
+            <div class="title">增加文档</div>
+            <div class="close">关闭</div>
+        </div>
+        <form>
+            <div class="form-item">
+                <label>标题</label>
+                <input name="title" placeholder="输入标题">
+            </div>
+            <div class="form-item">
+                <label>父节点</label>
+                <input name="parent">
+            </div>
+            <input hidden name="parentId">
+        </form>
+        <div class="foot">
+            <div class="btn enter">确定</div>
+            <div class="btn cancel">取消</div>
+        </div>
+    </div>
+
+    <script src="/lib/jquery/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
+    <script>
+
+        // ****** pre ******
+        $.fn.serializeObject = function() {
+          var o = {};
+          var a = this.serializeArray();
+          $.each(a, function() {
+            if (o[this.name]) {
+              if (!o[this.name].push) {
+                o[this.name] = [o[this.name]];
+              }
+              o[this.name].push(this.value || '');
+            } else {
+              o[this.name] = this.value || '';
+            }
+          });
+          return o;
+        };
+
+        // TODO 根节点不应该显示出来。使用另外的方式建立根文档
+
+        // ****** modal ******
+        (function(){
+          function clearModals() {
+            $('.modal input').val('');
+          }
+          function actionEnter ($this) {
+            var formData = $this.find('form').serializeObject();
+            if (!formData.title) return alert('未输入title');
+            formData.parentId = $this.find('input[name="parentId"]').val() || '#';
+            formData.markdown = '# ' + formData.title;
+            formData.html = '<h1><a name="'
+            + formData.title + '" class="reference-link"></a><span class="header-link octicon octicon-link"></span>'
+            + formData.title + '</h1>';
+            $.post('/publish', formData, function (ret) {
+              if (ret.succeed) {
+                const _id = ret._id;
+                clearModals();
+                return location.href = '/write/' + _id;
+              }
+              alert('发布失败');
+            });
+          }
+          $shadow = $('.shadow');
+          $shadow.click(function () {
+            $('.modal').hide();
+            $shadow.hide();
+            clearModals();
+          });
+          $('.modal').each(function () {
+            $this = $(this);
+
+            $this.find('.close').click(function () {
+              $this.hide();
+              $shadow.hide();
+              clearModals();
+            });
+            $this.find('.enter').click(function () {
+              actionEnter($this);
+            });
+            $this.find('.cancel').click(function () {
+              $this.hide();
+              $shadow.hide();
+              clearModals();
+            });
+          });
+        })();
+
+        // ****** function ******
+        function actionAdd() {
+          // TODO 以选中的节点作为父节点
+          const _id = $('#preview iframe').attr('_id') || null;
+          const title = _id && window.docMap[_id] ? window.docMap[_id].title : '根节点';
+          // let parentId, parentTitle;
+          // if (_id && window.docMap[_id].parentId) {
+          //   parentId = window.docMap[_id].parentId;
+          //   parentTitle = window.docMap[parentId].title;
+          // } else {
+          //   parentTitle = '根节点';
+          // }
+
+          $('#modal-add input[name="parentId"]').val(_id);
+          $('#modal-add input[name="parent"]').val(title);
+          $('#modal-add').show();
+          $('.shadow').show();
+        }
+
+        function actionEdit() {
+          const _id = $('#preview iframe').attr('_id');
+          if (_id) location.href = '/write/' + _id;
+        }
+
+        function actionDelete() {
+          const _id = $('#preview iframe').attr('_id');
+
+          $.ajax({
+            url: '/api/doc/' + _id,
+            type: "delete",
+            success: function(ret){
+              if (ret.succeed) {
+                console.log('删除成功');
+                location.reload();
+              } else {
+                alert('删除失败');
+              }
+            }
+          });
+
+        }
+
+        $.get('/api/docs', function (ret) {
+          docs = ret;
+
+          window.docMap = {};
+          docs.forEach(function(doc) {
+            window.docMap[doc._id] = doc;
+          });
+
+          renderDocTree(docs);
+        });
+
+        function renderDocTree(docs) {
+
+          docs = docs.map(function (doc) {
+            doc.text = doc.title;
+            doc.id = doc._id;
+            doc.parent = doc.parentId || '#';
+            return doc;
+          });
+
+          // docs.unshift({id:'root', parent:'#', title:'根节点', text:'根节点', markdown:'# 根节点', html:'根节点'});
+
+          console.log('docs', docs);
+
+          $('#tree')
+            .on('changed.jstree', function (e, data) {
+              const _id = data.node.id;
+              $.get('/api/doc/' + _id, function (ret) {
+                ret.html = ret.html || '空';
+                $('#preview iframe').attr('srcdoc', ret.html);
+                $('#preview iframe').attr('_id', _id);
+              });
+            })
+            .jstree({
+            "core" : {
+              "data": docs,
+              "themes" : {
+                "variant" : "large",
+                "icons": false,
+              }
+            },
+            "plugins" : [ "wholerow"]
+          });
+
+        }
+
+    </script>
+</body>
+</html>

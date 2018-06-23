@@ -1,0 +1,36 @@
+<html>
+<head>
+    <title>读</title>
+    <style>
+        * {
+            box-sizing:border-box;
+        }
+        .preview {
+            margin-top: 20px;
+        }
+        #title {
+            width: 50%;
+            font-size: 2.25em;
+            margin: 0 auto;
+            padding: 10px 0 10px 0;
+        }
+        #doc {
+            width: 50%;
+            min-width: 700px;
+            margin: 0 auto;
+            border: solid 2px #DDDDDD;
+        }
+    </style>
+    <link rel="stylesheet" href="/lib/editor.md/css/editormd.css" />
+</head>
+<body>
+    <div class="preview">
+        <div id="title"> <%= title %> </div>
+        <div id="doc">
+            <div class="markdown-body editormd-preview-container" previewcontainer="true" style="padding: 20px;">
+            <%- html %>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

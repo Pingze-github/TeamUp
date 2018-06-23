@@ -1,39 +1,160 @@
 <html>
 <head>
-    <title>Markdown编辑器</title>
+    <title>写</title>
     <link rel="stylesheet" href="/lib/editor.md/css/editormd.css" />
 </head>
+<style>
+    .editor {
+        margin-top: 50px;
+    }
+    .title-wrapper {
+        display: block;
+        width: 90%;
+        margin: 0 auto;
+        border: 1px solid #ddd;
+        border-bottom: none;
+    }
+    .title-wrapper input {
+        height: 46px;
+        width: 100%;
+        font-size: 26px;
+        line-height: 46px;
+        border: none;
+        padding: 0 10px 0 10px;
+    }
+    .title-wrapper input:focus {
+        outline: none;
+    }
+</style>
 
 <body>
-
-    <form>
-        <div id="md-editor" >
-            <textarea id="my-editormd-markdown-doc" name="my-editormd-markdown-doc" style="display:none;"></textarea>
-            <!-- 注意：name属性的值-->
-            <textarea id="my-editormd-html-code" name="my-editormd-html-code" style="display:none;"></textarea>
-        </div>
-    </form>
+    <div class="editor">
+        <form>
+            <div class="title-wrapper">
+                <input id="title" name="title" placeholder="标题" value="<%= title %>"/>
+            </div>
+            <div id="md-editor" >
+                <input id="_id" hidden value="<%=_id %>">
+                <textarea id="markdown" hidden><%= markdown %></textarea>
+                <textarea id="my-editormd-markdown-doc" name="my-editormd-markdown-doc" style="display:none;"></textarea>
+                <textarea id="my-editormd-html-code" name="my-editormd-html-code" style="display:none;"></textarea>
+            </div>
+        </form>
+    </div>
 
 
     <script src="/lib/jquery/jquery.min.js"></script>
-    <script src="/lib/editor.md/editormd.min.js"></script>
+    <script src="/lib/editor.md/editormd.js"></script>
     <script type="text/javascript">
+
       $(function() {
-        // 创建编辑器
+        // ****** vars ******
+        var _id = $('#_id').val();
+
         var mdEditor = editormd("md-editor", {
           width   : "90%",
           height  : 640,
           path    : "/lib/editor.md/lib/",
           syncScrolling : "single",
-          // previewTheme: 'dark',
-          // editorTheme: 'pastel-on-dark',
           saveHTMLToTextarea : true,
           htmlDecode: "style,script,iframe|on*",
           taskList: true,
+          toolbarIcons : function() {
+            return ['undo', 'redo', '|', 'bold', 'italic', 'del', '|', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', '|', 'hr', 'link', 'image', 'code', 'table', '||', 'watch', 'preview', 'fullscreen', '|', 'save', 'publish']
+          },
+          toolbarIconTexts: {
+            publish: '已发布'
+          },
+          toolbarIconsClass: {
+            save: 'fa-save',
+          },
+          lang: {
+            toolbar: {
+              save: '快速保存',
+              // publish: '已发布'
+            }
+          },
+          toolbarHandlers: {
+            publish: publishDoc,
+            save: saveDoc
+          },
+          needPublish: Boolean('<%= needPublish %>'),
+          onload: function () {
+            const needPublish = '<%= needPublish %>' !== 'false';
+            console.log('needPublish', needPublish, "<%= needPublish %>");
+            this.settings.toolbarIconTexts.publish = needPublish ? '发布更新' : '已发布';
+            this.setToolbar();
+            this.addKeyMap({
+              "Ctrl-S": function(cm) {
+                saveDoc(cm);
+              },
+            });
+          }
         });
-        // 注册事件
-        $("#md-editor").on('paste', function (ev) {
-          var data = ev.clipboardData;
+
+
+        mdEditor.setNeedPublish = function () {
+          this.settings.needPublish = true;
+          this.settings.toolbarIconTexts.publish = '发布更新';
+          this.setToolbar();
+        };
+
+        mdEditor.setPublished = function () {
+          this.settings.needPublish = false;
+          this.settings.toolbarIconTexts.publish = '已发布';
+          this.setToolbar();
+        };
+
+        mdEditor.settings.onchange = mdEditor.setNeedPublish;
+
+        // ****** functions ******
+        function publishDoc(cm) {
+          if (!mdEditor.settings.needPublish) return;
+          const markdown = cm.getValue();
+          const html = mdEditor.getPreviewedHTML();
+          const title = $('#title').val();
+          const data = { markdown, html, title,
+            needPublish: false
+          };
+          if (_id) data._id = _id;
+          $.post('/publish',
+            data,
+            function (ret) {
+              if (ret.succeed) {
+                _id = ret._id;
+                mdEditor.setPublished();
+              } else {
+                alert('发布失败');
+              }
+            }
+          );
+        }
+
+        function saveDoc(cm) {
+          const markdown = cm.getValue();
+          const title = $('#title').val();
+          const data = {
+            markdown,
+            title,
+            needPublish: mdEditor.settings.needPublish
+          };
+          if (_id) {
+            data._id = _id;
+          }
+          $.post('/save',
+            data,
+            function (ret) {
+              if (ret.succeed) {
+                _id = ret._id;
+              } else {
+                alert('保存失败');
+              }
+            }
+          );
+        }
+
+        // ****** binds ******
+        $("#md-editor").on('paste', function (event) {
           var items = (event.clipboardData || event.originalEvent.clipboardData).items;
           for (var index in items) {
             var item = items[index];
@@ -45,25 +166,31 @@
 
                 var imgName = blob.name + '_' + (+new Date());
 
+                if (mdEditor.getCursor().ch !== 0) {
+                    mdEditor.insertValue('\n');
+                }
+                const cursorUploadLabelStart = mdEditor.getCursor();
                 mdEditor.insertValue(`[图片上传中(${imgName})]`);
+                const cursorUploadLabelEnd = mdEditor.getCursor();
 
-                // //ajax上传图片
-                // $.post("{:url('api/uploader/upEditorImg')}",{base:base64}, function (ret) {
-                //   layer.msg(ret.msg);
-                //   if (ret.code === 1) {
-                //     //新一行的图片显示
-                //     editor.insertValue("\n![" + ret.data.title + "](" + ret.data.path + ")");
-                //   }
-                // });
-
+                $.post('/upload', {base:base64}, function (ret) {
+                  mdEditor.setSelection(cursorUploadLabelStart, cursorUploadLabelEnd);
+                  mdEditor.replaceSelection('');
+                  if (ret.succeed) {
+                    const cursorBeforeInsert = mdEditor.getCursor();
+                    mdEditor.insertValue("![](" + ret.url + ")");
+                    cursorBeforeInsert.ch += 2;
+                    mdEditor.setCursor(cursorBeforeInsert);
+                  } else {
+                    mdEditor.insertValue("![上传失败]()");
+                  }
+                });
               };
-              var url = reader.readAsDataURL(blob);
+              reader.readAsDataURL(blob);
             }
           }
         });
 
-
-        // mdEditor.getMarkdown();
       });
     </script>
 </body>
