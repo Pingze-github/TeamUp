@@ -13,12 +13,24 @@ const router = require('./routes');
 
 const app = new Koa();
 
+// 错误处理
+app.use(async (ctx, next) => {
+  try {
+    await next();
+  } catch (err) {
+    console.error(err);
+    if (ctx.url.startsWith('/api')) {
+      return ctx.body = {succeed: false};
+    }
+    return ctx.body = 'Internal Server Error';
+  }
+});
+
 app.use(staticServer(path.join(__dirname, 'public')));
 app.use(staticServer(path.join(os.homedir(), 'teamup/uploads')));
 
 app.use(koaBody({
-  multipart: true,
-  maxFieldsSize: '2mb',
+  formLimit: '2mb'
 }));
 
 render(app, {

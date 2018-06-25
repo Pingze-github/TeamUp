@@ -211,7 +211,7 @@
                 mdEditor.insertValue(`[图片上传中(${imgName})]`);
                 const cursorUploadLabelEnd = mdEditor.getCursor();
 
-                $.post('/upload', {base:base64}, function (ret) {
+                $.post('/api/upload', {base:base64}, function (ret) {
                   mdEditor.setSelection(cursorUploadLabelStart, cursorUploadLabelEnd);
                   mdEditor.replaceSelection('');
                   if (ret.succeed) {

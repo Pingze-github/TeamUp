@@ -102,7 +102,7 @@ router.delete('/api/doc/:_id', async (ctx) => {
 });
 
 // 图片上传
-router.post('/upload', async (ctx) => {
+router.post('/api/upload', async (ctx) => {
   const files = ctx.request.files || {};
   const file = files.file;
   const base = ctx.request.body.base;
