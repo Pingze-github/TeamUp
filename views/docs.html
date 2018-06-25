@@ -15,7 +15,9 @@
             overflow: hidden;
         }
         #wrap {
-            margin: 30px 60px 30px 60px;
+            height: 100%;
+            margin: 30px 60px 0 60px;
+            padding-bottom: 98px;
         }
         #header {
             height: 38px;
@@ -28,6 +30,9 @@
             line-height: 38px;
             padding-left: 16px;
             font-size: 30px;
+        }
+        #body {
+            height: 100%;
         }
         .btn {
             float: right;
@@ -43,9 +48,10 @@
             color: #EEEEEE;
         }
         .left {
+            height: 100%;
+            overflow: auto;
             float: left;
-            width: 25%;
-            min-height: 100%;
+            width: 300px;
             border: solid 1px #CCCCCC;
             border-right: none;
         }
@@ -58,17 +64,16 @@
             width: 100%;
         }
         .right {
-            width: 75%;
             height: 100%;
-            float: left;
+            margin-left: 300px;
+            overflow: auto;
             border: solid 1px #CCCCCC;
         }
         .right #preview {
             padding: 20px;
             display: block;
-            height: 100%;
+            /*height: 100%;*/
             width: 100%;
-            margin:0 auto;
             border: none;
         }
         /*modals*/
@@ -173,19 +178,23 @@
         <div id="header">
             <span id="ICON">TEAMUP</span>
         </div>
-        <div class="left">
-            <div id="tree-toolbar">
-                <ul class="editormd-menu">
-                    <li onclick="actionAdd()" class="pull-right"><a href="javascript:;" title="新增" unselectable="on"><i class="fa fa-plus" name="add" unselectable="on"></i></a></li>
-                    <li onclick="actionDelete()" class="pull-right"><a href="javascript:;" title="删除" unselectable="on"><i class="fa fa-remove" name="delete" unselectable="on"></i></a></li>
-                    <li onclick="actionEdit()" class="pull-right"><a href="javascript:;" title="编辑" unselectable="on"><i class="fa fa-pencil" name="eidt" unselectable="on"></i></a></li>
-                </ul>
+        <div id="body">
+            <div class="left">
+                <div id="tree-toolbar">
+                    <ul class="editormd-menu">
+                        <li onclick="actionAdd()" class="pull-right"><a href="javascript:;" title="新增" unselectable="on"><i class="fa fa-plus" name="add" unselectable="on"></i></a></li>
+                        <li onclick="actionDelete()" class="pull-right"><a href="javascript:;" title="删除" unselectable="on"><i class="fa fa-remove" name="delete" unselectable="on"></i></a></li>
+                        <li onclick="actionEdit()" class="pull-right"><a href="javascript:;" title="编辑" unselectable="on"><i class="fa fa-pencil" name="eidt" unselectable="on"></i></a></li>
+                    </ul>
+                </div>
+                <div id="tree"></div>
             </div>
-            <div id="tree"></div>
+            <div class="right">
+                <div id="preview" class="markdown-body editormd-preview-container" previewcontainer="true"></div>
+            </div>
         </div>
-        <div class="right">
-            <div id="preview" class="markdown-body editormd-preview-container" previewcontainer="true"></div>
-        </div>
+        <div id="footer"></div>
+
     </div>
     <div class="shadow"></div>
 
