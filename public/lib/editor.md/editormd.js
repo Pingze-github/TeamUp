@@ -3399,7 +3399,6 @@
         };
         
         var settings        = $.extend(defaults, options || {});
-        console.log('editormd.$marked' , editormd.$marked)
         var marked          = editormd.$marked;
         var markedRenderer  = new marked.Renderer();
         markdownToC         = markdownToC || [];        

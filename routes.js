@@ -26,13 +26,13 @@ router.get('/api/docs', async (ctx) => {
 
 
 // 编辑器
-router.get('/write', async (ctx) => {
-  const title = '这是一个标题';
-  const markdown = '# ' + title;
-  const needPublish = true;
-  const crumbs = [{ name:'根', path:'/docs' }];
-  return await ctx.render('write', {_id: '', markdown, title, needPublish, crumbs: crumbs});
-});
+// router.get('/write', async (ctx) => {
+//   const title = '这是一个标题';
+//   const markdown = '# ' + title;
+//   const needPublish = true;
+//   const crumbs = [{ name:'根', path:'/docs' }];
+//   return await ctx.render('write', {_id: '', markdown, title, needPublish, crumbs: crumbs});
+// });
 
 // 编辑文档页面
 router.get('/write/:_id', async (ctx) => {

@@ -78,6 +78,7 @@
 
 
     <script src="/lib/jquery/jquery.min.js"></script>
+    <script src="/js/editor.keyfuncs.js"></script>
     <script src="/lib/editor.md/editormd.js"></script>
     <script type="text/javascript">
 
@@ -121,22 +122,37 @@
             console.log('needPublish', needPublish, "<%= needPublish %>");
             this.settings.toolbarIconTexts.publish = needPublish ? '发布更新' : '已发布';
             this.setToolbar();
+
+            // 绑定对象
+            editorKeyFuncs.bind(mdEditor);
+
+            this.addKeyMap({
+              "Ctrl-K": editorKeyFuncs.delete_cur_line,
+              "Ctrl-D": editorKeyFuncs.copy_cur_line,
+              "Ctrl-Up": editorKeyFuncs.move_up_cur_line,
+              "Ctrl-Down": editorKeyFuncs.move_down_cur_line
+            });
+
             this.addKeyMap({
               "Ctrl-S": function(cm) {
                 saveDoc(cm);
               },
             });
 
+
             loadSaveCursor(this);
-            intervalSaveCursor(this);
+            intervalSaveCursor(this, 1000);
           }
         });
+
+        window.mdEditor = mdEditor;
 
         mdEditor.setNeedPublish = function () {
           this.settings.needPublish = true;
           this.settings.toolbarIconTexts.publish = '发布更新';
           this.setToolbar();
         };
+        mdEditor.settings.onchange = mdEditor.setNeedPublish;
 
         mdEditor.setPublished = function () {
           this.settings.needPublish = false;
@@ -144,7 +160,7 @@
           this.setToolbar();
         };
 
-        mdEditor.settings.onchange = mdEditor.setNeedPublish;
+
 
         // ****** functions ******
 
@@ -154,7 +170,6 @@
          */
         function loadSaveCursor(editor) {
           var cursor = sessionStorage.getItem('cursor');
-          console.log('读取cursor', cursor);
           if (cursor) {
             try {
               cursor = JSON.parse(cursor);
@@ -171,7 +186,6 @@
         function intervalSaveCursor(editor, ms=1000) {
           setInterval(() => {
             var cursor =  editor.getCursor();
-            console.log('缓存cursor', cursor);
             sessionStorage.setItem('cursor', JSON.stringify(cursor));
           }, ms);
         }
