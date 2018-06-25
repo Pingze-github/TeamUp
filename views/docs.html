@@ -44,7 +44,7 @@
         }
         .left {
             float: left;
-            width: 30%;
+            width: 25%;
             min-height: 100%;
             border: solid 1px #CCCCCC;
             border-right: none;
@@ -57,13 +57,14 @@
         #tree {
             width: 100%;
         }
-        #preview {
-            width: 70%;
+        .right {
+            width: 75%;
             height: 100%;
             float: left;
             border: solid 1px #CCCCCC;
         }
-        #preview iframe {
+        .right #preview {
+            padding: 20px;
             display: block;
             height: 100%;
             width: 100%;
@@ -182,8 +183,8 @@
             </div>
             <div id="tree"></div>
         </div>
-        <div id="preview">
-            <iframe srcdoc=""></iframe>
+        <div class="right">
+            <div id="preview" class="markdown-body editormd-preview-container" previewcontainer="true"></div>
         </div>
     </div>
     <div class="shadow"></div>
@@ -304,7 +305,7 @@
       }
 
       function actionAdd() {
-        const _id = $('#preview iframe').attr('_id');
+        const _id = $('#preview').attr('_id');
         // select选中当前文档树中选中的
         if (_id && window.docMap[_id]) {
           $('#modal-add *[name="parent"]').html('<option value="' + _id +'">' + window.docMap[_id].title + '</option>')
@@ -319,12 +320,14 @@
       }
 
       function actionEdit() {
-        const _id = $('#preview iframe').attr('_id');
+        const _id = $('#preview').attr('_id');
         if (_id) location.href = '/write/' + _id;
       }
 
       function actionDelete() {
-        const _id = $('#preview iframe').attr('_id');
+        // FIXME 暂时不使用
+        return alert('暂不开放删除');
+        const _id = $('#preview').attr('_id');
         $.ajax({
           url: '/api/doc/' + _id,
           type: "delete",
@@ -400,8 +403,8 @@
               const _id = data.node.id;
               $.get('/api/doc/' + _id, function (ret) {
                 ret.html = ret.html || '空';
-                $('#preview iframe').attr('srcdoc', ret.html);
-                $('#preview iframe').attr('_id', _id);
+                $('#preview').html(ret.html);
+                $('#preview').attr('_id', _id);
               });
             })
             .on('ready.jstree', function () {
