@@ -342,7 +342,7 @@
         });
       }
 
-      function renderSelect(docs) {
+      function renderSelectTree(docs) {
         var $parent = $('#modal-add *[name="parent"]');
         var $parentTree = $('#modal-add #parent-tree');
 
@@ -389,7 +389,7 @@
         // 这里用了奇技淫巧。通过mouseup限制select下拉菜单的弹出，而监听mousedown
       }
 
-      function renderDocTree(docs, cb) {
+      function renderDocsTree(docs, cb) {
         console.log('重新渲染');
 
         if ($.jstree.reference('#tree')) {
@@ -401,6 +401,7 @@
           $('#tree')
             .on('select_node.jstree', function (e, data) {
               const _id = data.node.id;
+              sessionStorage.setItem('node_id', _id);
               $.get('/api/doc/' + _id, function (ret) {
                 ret.html = ret.html || '空';
                 $('#preview').html(ret.html);
@@ -408,8 +409,10 @@
               });
             })
             .on('ready.jstree', function () {
+              const cacheId = sessionStorage.getItem('node_id');
               const fisrtId = $('#tree').find('li').first().attr('id');
-              if (fisrtId) $.jstree.reference('#tree').select_node(fisrtId);
+              console.log(cacheId, fisrtId)
+              if (cacheId || fisrtId) $.jstree.reference('#tree').select_node(cacheId || fisrtId);
             })
             .jstree({
               "core" : {
@@ -442,9 +445,9 @@
             return a.text.localeCompare(b.text);
           });
           // 渲染树
-          renderDocTree(docs, cbTree);
+          renderDocsTree(docs, cbTree);
           // 渲染下拉菜单
-          renderSelect(docs, cbSelect);
+          renderSelectTree(docs, cbSelect);
 
         });
       }
