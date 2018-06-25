@@ -11,6 +11,7 @@
         margin-top: 50px;
         border: 1px solid #ddd;
         border-bottom: none;
+        font-size: 14px;
     }
     .breadcrumb a {
         text-decoration: none;
@@ -111,9 +112,11 @@
                 saveDoc(cm);
               },
             });
+
+            loadSaveCursor(this);
+            intervalSaveCursor(this);
           }
         });
-
 
         mdEditor.setNeedPublish = function () {
           this.settings.needPublish = true;
@@ -130,6 +133,35 @@
         mdEditor.settings.onchange = mdEditor.setNeedPublish;
 
         // ****** functions ******
+
+        /**
+         * 读取重设光标位置
+         * @param editor
+         */
+        function loadSaveCursor(editor) {
+          var cursor = sessionStorage.getItem('cursor');
+          console.log('读取cursor', cursor);
+          if (cursor) {
+            try {
+              cursor = JSON.parse(cursor);
+              editor.setCursor(cursor);
+            } catch (e) {}
+          }
+        }
+
+        /**
+         * 定时缓存光标位置
+         * @param editor
+         * @param ms
+         */
+        function intervalSaveCursor(editor, ms=1000) {
+          setInterval(() => {
+            var cursor =  editor.getCursor();
+            console.log('缓存cursor', cursor);
+            sessionStorage.setItem('cursor', JSON.stringify(cursor));
+          }, ms);
+        }
+
         function renderCrumbs() {
           var crumbData = JSON.parse('<%- JSON.stringify(crumbs) %>');
           var html = '';

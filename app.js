@@ -66,4 +66,7 @@ app.listen(3000, () => {
 // 文档系统。浏览、修改、更新
 // 文档层级结构
 // 图片上传服务，支持ctrl+v粘贴
-// TODO sessionStorage储存用户状态
+// sessionStorage储存用户操作状态，包括鼠标指针停留位置
+// TODO 定时保存
+// TODO write页面布局优化
+// TODO codemirror 实现sublime快捷键
