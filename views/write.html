@@ -4,8 +4,26 @@
     <link rel="stylesheet" href="/lib/editor.md/css/editormd.css" />
 </head>
 <style>
-    .editor {
+    .breadcrumb {
+        height: 30px;
+        width: 90%;
+        margin: 0 auto;
         margin-top: 50px;
+        border: 1px solid #ddd;
+        border-bottom: none;
+    }
+    .breadcrumb a {
+        text-decoration: none;
+        color: blue;
+    }
+    .breadcrumb span {
+        line-height: 30px;
+        margin-left: 6px;
+    }
+    .breadcrumb span:first-child {
+        margin-left: 12px;
+    }
+    .editor {
     }
     .title-wrapper {
         display: block;
@@ -28,6 +46,7 @@
 </style>
 
 <body>
+    <div class="breadcrumb"></div>
     <div class="editor">
         <form>
             <div class="title-wrapper">
@@ -48,6 +67,10 @@
     <script type="text/javascript">
 
       $(function() {
+        // ****** init ******
+
+        renderCrumbs();
+
         // ****** vars ******
         var _id = $('#_id').val();
 
@@ -70,8 +93,7 @@
           },
           lang: {
             toolbar: {
-              save: '快速保存',
-              // publish: '已发布'
+              save: '保存(ctrl+s)',
             }
           },
           toolbarHandlers: {
@@ -108,6 +130,22 @@
         mdEditor.settings.onchange = mdEditor.setNeedPublish;
 
         // ****** functions ******
+        function renderCrumbs() {
+          var crumbData = JSON.parse('<%- JSON.stringify(crumbs) %>');
+          var html = '';
+          for (crumb of crumbData) {
+            if (html) html += '<span>/</span>';
+            var chtml;
+            if (crumb.path) {
+              chtml = '<span><a href="' + crumb.path + '">' + crumb.name + '</a></span>';
+            } else {
+              chtml = '<span>' + crumb.name + '</span>';
+            }
+            html += chtml;
+          }
+          $('.breadcrumb').html(html);
+        }
+
         function publishDoc(cm) {
           if (!mdEditor.settings.needPublish) return;
           const markdown = cm.getValue();

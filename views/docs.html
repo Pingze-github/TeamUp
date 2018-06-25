@@ -390,7 +390,6 @@
       }
 
       function renderDocsTree(docs, cb) {
-        console.log('重新渲染');
 
         if ($.jstree.reference('#tree')) {
           console.log($.jstree.reference('#tree'));
@@ -409,10 +408,12 @@
               });
             })
             .on('ready.jstree', function () {
+              const hashId = location.hash.substr(1);
               const cacheId = sessionStorage.getItem('node_id');
               const fisrtId = $('#tree').find('li').first().attr('id');
-              console.log(cacheId, fisrtId)
-              if (cacheId || fisrtId) $.jstree.reference('#tree').select_node(cacheId || fisrtId);
+              console.log(cacheId, fisrtId, hashId);
+              if (hashId || cacheId || fisrtId) $.jstree.reference('#tree').select_node(hashId || cacheId || fisrtId);
+              if (hashId) history.replaceState(null,'',location.pathname+location.search);
             })
             .jstree({
               "core" : {

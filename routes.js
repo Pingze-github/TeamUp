@@ -30,20 +30,32 @@ router.get('/write', async (ctx) => {
   const title = '这是一个标题';
   const markdown = '# ' + title;
   const needPublish = true;
-  return await ctx.render('write', {_id: '', markdown, title, needPublish});
+  const crumbs = [{ name:'根', path:'/docs' }];
+  return await ctx.render('write', {_id: '', markdown, title, needPublish, crumbs: crumbs});
 });
 
+// 编辑文档页面
 router.get('/write/:_id', async (ctx) => {
   const _id = ctx.params._id;
   const doc = await Models.document.findOne({_id: _id});
   const needPublish = doc.needPublish || false;
+  let crumbs = [{ name:'根', path:'/docs' }];
+  const lineNodes = [];
+  let thisNode = doc;
+  while (true) {
+    lineNodes.push({ name: thisNode.title, path: '/docs#' + thisNode._id});
+    if (!thisNode.parentId || thisNode.parentId === '#') break;
+    thisNode = await Models.document.findOne({_id: thisNode.parentId});
+  }
+  lineNodes.reverse();
+  crumbs = crumbs.concat(lineNodes);
   if (doc) {
-    return await ctx.render('write', {_id: ctx.params._id, markdown: doc.markdown, title: doc.title, needPublish});
+    return await ctx.render('write', {_id: ctx.params._id, markdown: doc.markdown, title: doc.title, needPublish, crumbs: crumbs});
   }
   return ctx.body = '<p>不存在此文档</p><script>setTimeout(function(){location.href="/write"}, 2000)</script>';
 });
 
-// 阅读页面
+// 文档页面
 router.get('/doc/:_id', async (ctx) => {
   try {
     const doc = await Models.document.findOne({_id: ctx.params._id.toString()});
@@ -55,6 +67,7 @@ router.get('/doc/:_id', async (ctx) => {
   }
 });
 
+// 获取文档数据
 router.get('/api/doc/:_id', async (ctx) => {
   try {
     const doc = await Models.document.findOne({_id: ctx.params._id.toString()});
@@ -64,15 +77,14 @@ router.get('/api/doc/:_id', async (ctx) => {
   }
 });
 
-router.delete('/api/doc/:_id', async (ctx) => {
 
+// 删除文档
+router.delete('/api/doc/:_id', async (ctx) => {
   async function findChildrenIds(ids) {
     const children = await Models.document.find({parentId: {$in: ids}}, {_id: 1});
     return children.map((doc) => doc._id);
   }
 
-
-  // TODO 将其子节点都删掉
   let deleteIds = [];
   let ids = [ctx.params._id];
   while (true) {
