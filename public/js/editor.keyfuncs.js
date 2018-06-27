@@ -28,12 +28,14 @@ editorKeyFuncs = {
   move_up_cur_line: function () {
     // 向上移动当前行
     var cursor = mdEditor.getCursor();
+    // 首行特别处理
+    if (cursor.line === 0) return;
     mdEditor.setSelection({line: cursor.line-1, ch: 999999}, {line: cursor.line, ch: 999999});
     var curLineText = mdEditor.getSelection({line: cursor.line, ch: 0}, {line: cursor.line, ch: 999999});
-    curLineText = curLineText.substr(1);
     mdEditor.replaceSelection('');
     mdEditor.setSelection(cursor, cursor);
     mdEditor.setCursor({ line: cursor.line ? cursor.line-1 : 0, ch: 0});
+    curLineText = curLineText.substr(1);
     mdEditor.insertValue(curLineText + '\n');
     mdEditor.setCursor({ line: cursor.line ? cursor.line-1 : 0, ch: cursor.ch});
   },
@@ -41,13 +43,12 @@ editorKeyFuncs = {
   move_down_cur_line: function () {
     // 向下移动当前行
     var cursor = mdEditor.getCursor();
-    mdEditor.setSelection({line: cursor.line-1, ch: 999999}, {line: cursor.line, ch: 999999});
-    var curLineText = mdEditor.getSelection({line: cursor.line, ch: 0}, {line: cursor.line, ch: 999999});
-    curLineText = curLineText.substr(1);
+    mdEditor.setSelection({line: cursor.line, ch: 0}, {line: cursor.line+1, ch: 0});
+    var curLineText = mdEditor.getSelection();
     mdEditor.replaceSelection('');
     mdEditor.setSelection(cursor, cursor);
-    mdEditor.setCursor({ line: cursor.line ? cursor.line+1 : 0, ch: 0});
-    mdEditor.insertValue(curLineText + '\n');
-    mdEditor.setCursor({ line: cursor.line ? cursor.line+1 : 0, ch: cursor.ch});
+    mdEditor.setCursor({ line: cursor.line, ch: 999999});
+    mdEditor.insertValue('\n' + curLineText.trim());
+    mdEditor.setCursor({ line: cursor.line+1, ch: cursor.ch});
   }
 };

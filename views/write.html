@@ -6,12 +6,20 @@
 <style>
     * {
         box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+    html,body {
+        height: 100%;
+        overflow: hidden;
+    }
+    .wrap {
+        padding-top: 30px;
     }
     .breadcrumb {
         height: 30px;
         width: 90%;
         margin: 0 auto;
-        margin-top: 46px;
         border: 1px solid #ddd;
         border-bottom: none;
         font-size: 14px;
@@ -59,21 +67,23 @@
 </style>
 
 <body>
-    <div class="breadcrumb"></div>
-    <div class="editor">
-        <form>
-            <div class="title-wrapper">
-                <input id="title" name="title" placeholder="标题" value="<%= title %>"/>
-            </div>
-            <div class="editor-wrapper">
-                <div id="md-editor" >
-                    <input id="_id" hidden value="<%=_id %>">
-                    <textarea id="markdown" hidden><%= markdown %></textarea>
-                    <textarea id="my-editormd-markdown-doc" name="my-editormd-markdown-doc" style="display:none;"></textarea>
-                    <textarea id="my-editormd-html-code" name="my-editormd-html-code" style="display:none;"></textarea>
+    <div class="wrap">
+        <div class="breadcrumb"></div>
+        <div class="editor">
+            <form>
+                <div class="title-wrapper">
+                    <input id="title" name="title" placeholder="标题" value="<%= title %>"/>
                 </div>
-            </div>
-        </form>
+                <div class="editor-wrapper">
+                    <div id="md-editor" >
+                        <input id="_id" hidden value="<%=_id %>">
+                        <textarea id="markdown" hidden><%= markdown %></textarea>
+                        <textarea id="my-editormd-markdown-doc" name="my-editormd-markdown-doc" style="display:none;"></textarea>
+                        <textarea id="my-editormd-html-code" name="my-editormd-html-code" style="display:none;"></textarea>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
 
 

@@ -3460,6 +3460,7 @@
     var start = posFromMouse(cm, e);
     window.focus();
 
+
     switch (e_button(e)) {
     case 1:
       if (start)
@@ -3468,9 +3469,11 @@
         e_preventDefault(e);
       break;
     case 2:
+      // 鼠标中键
       if (webkit) cm.state.lastMiddleDown = +new Date;
       if (start) extendSelection(cm.doc, start);
       setTimeout(function() {display.input.focus();}, 20);
+      middleButtonDown(cm, e, start);
       e_preventDefault(e);
       break;
     case 3:
@@ -3502,6 +3505,118 @@
       leftButtonStartDrag(cm, e, start, modifier);
     else
       leftButtonSelect(cm, e, start, type, modifier);
+  }
+
+  // Middle button works like leftbutton+ctrl
+  function middleButtonDown(cm, e, start) {
+    if (ie) setTimeout(bind(ensureFocus, cm), 0);
+    else ensureFocus(cm);
+    var modifier = mac ? e.metaKey : e.ctrlKey;
+    middleButtonSelect(cm, e, start, modifier);
+  }
+
+  function middleButtonSelect(cm, e, start, addNew) {
+    var type = "single";
+    var display = cm.display, doc = cm.doc;
+    e_preventDefault(e);
+
+    var ourRange, ourIndex, startSel = doc.sel, ranges = startSel.ranges;
+
+    type = "rect";
+    if (!addNew) ourRange = new Range(start, start);
+    start = posFromMouse(cm, e, true, true);
+
+    ourIndex = 0;
+    setSelection(doc, new Selection([ourRange], 0), sel_mouse);
+    startSel = doc.sel;
+
+    var lastPos = start;
+    function extendTo(pos) {
+      if (cmp(lastPos, pos) == 0) return;
+      lastPos = pos;
+
+      if (type == "rect") {
+        var ranges = [], tabSize = cm.options.tabSize;
+        var startCol = countColumn(getLine(doc, start.line).text, start.ch, tabSize);
+        var posCol = countColumn(getLine(doc, pos.line).text, pos.ch, tabSize);
+        var left = Math.min(startCol, posCol), right = Math.max(startCol, posCol);
+        for (var line = Math.min(start.line, pos.line), end = Math.min(cm.lastLine(), Math.max(start.line, pos.line));
+             line <= end; line++) {
+          var text = getLine(doc, line).text, leftPos = findColumn(text, left, tabSize);
+          if (left == right)
+            ranges.push(new Range(Pos(line, leftPos), Pos(line, leftPos)));
+          else if (text.length > leftPos)
+            ranges.push(new Range(Pos(line, leftPos), Pos(line, findColumn(text, right, tabSize))));
+        }
+        if (!ranges.length) ranges.push(new Range(start, start));
+        setSelection(doc, normalizeSelection(startSel.ranges.slice(0, ourIndex).concat(ranges), ourIndex),
+          {origin: "*mouse", scroll: false});
+        cm.scrollIntoView(pos);
+      } else {
+        var oldRange = ourRange;
+        var anchor = oldRange.anchor, head = pos;
+        if (type != "single") {
+          if (type == "double")
+            var range = cm.findWordAt(pos);
+          else
+            var range = new Range(Pos(pos.line, 0), clipPos(doc, Pos(pos.line + 1, 0)));
+          if (cmp(range.anchor, anchor) > 0) {
+            head = range.head;
+            anchor = minPos(oldRange.from(), range.anchor);
+          } else {
+            head = range.anchor;
+            anchor = maxPos(oldRange.to(), range.head);
+          }
+        }
+        var ranges = startSel.ranges.slice(0);
+        ranges[ourIndex] = new Range(clipPos(doc, anchor), head);
+        setSelection(doc, normalizeSelection(ranges, ourIndex), sel_mouse);
+      }
+    }
+
+    var editorSize = display.wrapper.getBoundingClientRect();
+    // Used to ensure timeout re-tries don't fire when another extend
+    // happened in the meantime (clearTimeout isn't reliable -- at
+    // least on Chrome, the timeouts still happen even when cleared,
+    // if the clear happens after their scheduled firing time).
+    var counter = 0;
+
+    function extend(e) {
+      var curCount = ++counter;
+      var cur = posFromMouse(cm, e, true, type == "rect");
+      if (!cur) return;
+      if (cmp(cur, lastPos) != 0) {
+        ensureFocus(cm);
+        extendTo(cur);
+        var visible = visibleLines(display, doc);
+        if (cur.line >= visible.to || cur.line < visible.from)
+          setTimeout(operation(cm, function(){if (counter == curCount) extend(e);}), 150);
+      } else {
+        var outside = e.clientY < editorSize.top ? -20 : e.clientY > editorSize.bottom ? 20 : 0;
+        if (outside) setTimeout(operation(cm, function() {
+          if (counter != curCount) return;
+          display.scroller.scrollTop += outside;
+          extend(e);
+        }), 50);
+      }
+    }
+
+    function done(e) {
+      counter = Infinity;
+      e_preventDefault(e);
+      display.input.focus();
+      off(document, "mousemove", move);
+      off(document, "mouseup", up);
+      doc.history.lastSelOrigin = null;
+    }
+
+    var move = operation(cm, function(e) {
+      if (!e_button(e)) done(e);
+      else extend(e);
+    });
+    var up = operation(cm, done);
+    on(document, "mousemove", move);
+    on(document, "mouseup", up);
   }
 
   // Start a text drag. When it ends, see if any dragging actually
@@ -3548,7 +3663,7 @@
       ourRange = doc.sel.primary();
     }
 
-    if (e.altKey) {
+    if (e.ctrlKey) {
       type = "rect";
       if (!addNew) ourRange = new Range(start, start);
       start = posFromMouse(cm, e, true, true);

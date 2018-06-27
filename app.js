@@ -58,7 +58,7 @@ app
   .use(router.routes())
   .use(router.allowedMethods());
 
-app.listen(3000, () => {
+app.listen(1000, () => {
   console.log('Server running...')
 });
 
@@ -69,4 +69,6 @@ app.listen(3000, () => {
 // TODO localStorage储存用户操作状态，包括鼠标指针停留位置
 // TODO 定时保存
 // write页面布局优化
-// TODO codemirror 实现丰富的快捷键
+// codemirror 实现快捷键
+// TODO 题目更改也影响发布状态
+// TODO 支持修改父节点
