@@ -24,3 +24,4 @@ Markdown编辑器：Editor.md
 
 + 账号系统加入
 + 全文档搜索
++ mongo/es 数据同步

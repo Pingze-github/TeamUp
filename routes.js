@@ -11,6 +11,8 @@ const fpSpawner = filePathSpawner({
 const Router = require('koa-router');
 const router = new Router();
 
+const Document = require('./esmodels/document');
+
 router.get('/', (ctx) => {
   ctx.body = 'index'
 });
@@ -94,9 +96,9 @@ router.delete('/api/doc/:_id', async (ctx) => {
   }
   deleteIds = deleteIds.map(v => Models.Types.ObjectId(v));
 
-  console.log('deleting', deleteIds);
+  console.log('删除多项', deleteIds);
 
-  console.log(await Models.document.deleteMany({_id: {$in: deleteIds}}));
+  await Document.deleteMany(deleteIds);
 
   return ctx.body = {succeed: true};
 });
@@ -131,13 +133,10 @@ router.post('/api/upload', async (ctx) => {
 router.post('/publish', async (ctx) => {
   // 如果有效id，则认为是更新；没有则新建
   if (ctx.request.body._id && await Models.document.findOne({_id: ctx.request.body._id})) {
-    await Models.document.update(
-      {_id: ctx.request.body._id},
-      {$set: ctx.request.body}
-    );
+    await Document.update(ctx.request.body._id, ctx.request.body);
     return ctx.body = {succeed: true, isNew: false, _id: ctx.request.body._id}
   }
-  const ret = await Models.document.create(ctx.request.body);
+  const ret = await Document.create(ctx.request.body);
   return ctx.body = {succeed: true, isNew: true, _id: ret._id};
 });
 
@@ -145,13 +144,10 @@ router.post('/publish', async (ctx) => {
 router.post('/save', async (ctx) => {
   // 如果有效id，则认为是更新；没有则新建
   if (ctx.request.body._id && await Models.document.findOne({_id: ctx.request.body._id})) {
-    await Models.document.update(
-      {_id: ctx.request.body._id},
-      {$set: ctx.request.body}
-    );
+    await Document.update(ctx.request.body._id, ctx.request.body);
     return ctx.body = {succeed: true, isNew: false, _id: ctx.request.body._id}
   }
-  const ret = await Models.document.create(ctx.request.body);
+  const ret = await Document.create(ctx.request.body);
   return ctx.body = {succeed: true, isNew: true, _id: ret._id};
 });
 
